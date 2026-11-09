@@ -19,3 +19,6 @@ checkpoints/
 # Secrets
 .env
 *token*
+
+# CatBoost training logs
+catboost_info/
