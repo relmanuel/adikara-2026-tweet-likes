@@ -1,0 +1,21 @@
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# Heavy artefacts (embedding caches, model checkpoints) - keep out of git
+cache/
+checkpoints/
+*.pt
+*.bin
+*.safetensors
+
+# Secrets
+.env
+*token*

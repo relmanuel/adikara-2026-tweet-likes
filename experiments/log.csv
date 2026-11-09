@@ -1,0 +1,6 @@
+timestamp,name,features,params,cv_mean,cv_std,oof_rmse,seed,runtime_s,notes
+2026-11-09 16:21:06,DECISION_branch,audit,Branch R: StratifiedKFold(5) on zero+decile bins of log1p(likes),,,,,,"random split in time (test share ~18-19% every month); 31.2% test rows have unseen user vs 32.6% in CV; id == date order within each file, no extra leak; adversarial AUC 0.629 driven by device shift (test Android 70% vs train 53%) and train-only missing categories; dropped 25 negative-likes rows"
+2026-11-09 16:21:06,E0_global_mean,none,,2.33586,0.00426,2.33586,42,0.0,
+2026-11-09 16:21:06,E0_user_mean_m5,username smoothed mean,m=5,1.85634,0.02043,1.85645,42,0.1,
+2026-11-09 16:21:06,E0_user_mean_m20,username smoothed mean,m=20,1.88466,0.02007,1.88476,42,0.1,
+2026-11-09 16:21:06,E0_user_mean_m50,username smoothed mean,m=50,1.90615,0.02006,1.90625,42,0.1,
