@@ -174,7 +174,7 @@ def tfidf_matrices(tr: pd.DataFrame, te: pd.DataFrame, svd_dims=64, seed=42):
     return M[:n], M[n:], svd.iloc[:n].reset_index(drop=True), svd.iloc[n:].reset_index(drop=True)
 
 
-def text_model_oof(M_trn, y_trn, M_dsts, inner_folds=5, seed=42, alpha=3.0):
+def text_model_oof(M_trn, y_trn, M_dsts, inner_folds=5, seed=42, alpha=3.0, prefix="txt", C=2.0):
     """Ridge (log1p likes) + logistic (is zero) on TF-IDF.
     Returns inner-OOF preds for the training rows and full-fit preds for each M_dst."""
     from sklearn.linear_model import LogisticRegression, Ridge
@@ -182,12 +182,29 @@ def text_model_oof(M_trn, y_trn, M_dsts, inner_folds=5, seed=42, alpha=3.0):
 
     def fit_pred(Ma, ya, Mbs):
         r = Ridge(alpha=alpha).fit(Ma, ya)
-        lr = LogisticRegression(C=2.0, max_iter=2000).fit(Ma, (ya == 0).astype(int))
+        lr = LogisticRegression(C=C, max_iter=3000).fit(Ma, (ya == 0).astype(int))
         return [np.c_[r.predict(Mb), lr.predict_proba(Mb)[:, 1]] for Mb in Mbs]
 
     oof = np.zeros((M_trn.shape[0], 2))
     for a, b in KFold(inner_folds, shuffle=True, random_state=seed).split(y_trn):
         oof[b] = fit_pred(M_trn[a], y_trn[a], [M_trn[b]])[0]
     dst = fit_pred(M_trn, y_trn, M_dsts)
-    cols = ["txt_ridge", "txt_pzero"]
+    cols = [f"{prefix}_ridge", f"{prefix}_pzero"]
     return pd.DataFrame(oof, columns=cols), [pd.DataFrame(d, columns=cols) for d in dst]
+
+
+def load_embeddings(name):
+    """Standardised (scaler fit on train+test, unsupervised) embeddings from features/emb/."""
+    from common import ROOT
+    a = np.load(ROOT / "features" / "emb" / f"{name}_train.npy").astype(np.float32)
+    b = np.load(ROOT / "features" / "emb" / f"{name}_test.npy").astype(np.float32)
+    allx = np.vstack([a, b])
+    mu, sd = allx.mean(0), allx.std(0) + 1e-6
+    return (a - mu) / sd, (b - mu) / sd
+
+
+def pca_frame(Etr, Ete, dims, prefix, seed=42):
+    from sklearn.decomposition import PCA
+    P = PCA(dims, random_state=seed).fit(np.vstack([Etr, Ete]))
+    cols = [f"{prefix}_pc{i}" for i in range(dims)]
+    return pd.DataFrame(P.transform(Etr), columns=cols), pd.DataFrame(P.transform(Ete), columns=cols)
